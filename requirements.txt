@@ -1,8 +1,6 @@
-langchain
+fastapi
+uvicorn
+pydantic
+langgraph
 langchain-google-genai
-langchain-community
-chromadb
-google-generativeai
 python-dotenv
-streamlit
-wikipedia

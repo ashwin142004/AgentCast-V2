@@ -1,53 +1,41 @@
-#Main file for DCS
-import pandas as pd
-from datetime import datetime
-from src.graph import compile_graph
+from fastapi import FastAPI, HTTPException
+from app.schemas import PodcastRequest, PodcastResponse
+from app.workflow import build_graph
 
-def main():
-    """Main function to run the AgentCast podcast generation."""
-    app = compile_graph()
+app = FastAPI(title="AgentCast V2 API")
+graph = build_graph()
 
-    podcast_topic = "The rise of artificial general intelligence and its potential impact on society"
+@app.get("/")
+def health_check():
+    return {"status": "ok", "service": "AgentCast V2"}
+
+@app.post("/generate-podcast", response_model=PodcastResponse)
+async def generate_podcast(request: PodcastRequest):
+    print(f"🚀 Receiving Request: {request}")
     
     initial_state = {
-        "topic": podcast_topic,
+        "topic": request.topic,
         "messages": [],
-        "turn_number": 0,
         "dcs_analysis": {},
-        "evaluation_log": []
+        "turn_count": 0,
+        "target_language": request.language,
+        "final_script": ""
     }
-
-    print(f"🚀 Starting AgentCast podcast on: {podcast_topic}\n")
-
-    final_state = None
-    # ✨ FIX 1: Only print messages from the host and guest nodes
-    generating_nodes = ["host", "guest"]
-
-    for event in app.stream(initial_state):
-        if "__end__" not in event:
-            node_name = next(iter(event.keys()))
-            if node_name in generating_nodes:
-                latest_message = event[node_name]['messages'][-1]
-                role = "Host" if latest_message.type == "human" else "Guest"
-                print(f"\n>> {role}:\n{latest_message.content}\n")
-        else:
-            final_state = event["__end__"]
-
-    print("\n--- ✅ PODCAST FINISHED ---")
-
-    if final_state and final_state.get("evaluation_log"):
-        print("\n--- 📈 EVALUATION INDEX ---")
-        evaluation_df = pd.DataFrame(final_state["evaluation_log"])
-        print(evaluation_df.to_string())
+    
+    try:
+        # Run graph to completion
+        result = graph.invoke(initial_state)
         
-        # Save the evaluation log to a CSV file
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = f"outputs/evaluation_log_{timestamp}.csv"
-        evaluation_df.to_csv(output_path, index=False)
-        print(f"\nEvaluation log saved to {output_path}")
-    else:
-        print("No final state or evaluation log to process.")
+        return PodcastResponse(
+            status="completed",
+            script=result["final_script"],
+            original_script=None, # Could capture intermediate if needed
+            language=request.language
+        )
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    main()
-
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
