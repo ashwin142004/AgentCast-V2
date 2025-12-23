@@ -4,3 +4,13 @@ pydantic
 langgraph
 langchain-google-genai
 python-dotenv
+google-genai
+torch
+transformers
+sentencepiece
+sacremoses
+nltk
+mosestokenizer
+git+https://github.com/VarunGumma/IndicTransToolkit
+indic-nlp-library
+ip_association

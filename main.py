@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from app.schemas import PodcastRequest, PodcastResponse
+from app.schemas import PodcastRequest, PodcastResponse, TranslationRequest, TranslationResponse
 from app.workflow import build_graph
 
 app = FastAPI(title="AgentCast V2 API")
@@ -34,6 +34,24 @@ async def generate_podcast(request: PodcastRequest):
         )
     except Exception as e:
         print(f"❌ Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/translate", response_model=TranslationResponse)
+async def translate_text_endpoint(request: TranslationRequest):
+    print(f"Loading Translator for: {request.target_language}")
+    
+    # Ensure this import path matches your folder structure
+    from app.agents.translator import translate_script
+    
+    try:
+        translated = translate_script(request.text, request.target_language)
+        return TranslationResponse(
+            translated_text=translated,
+            original_text=request.text,
+            language=request.target_language
+        )
+    except Exception as e:
+        print(f"❌ Translation Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

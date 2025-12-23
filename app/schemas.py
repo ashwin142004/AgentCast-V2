@@ -21,3 +21,12 @@ class DCSAnalysis(BaseModel):
     coherence_reason: str = Field(..., description="Reason for the score")
     topic_drift: str = Field(..., description="'on_topic', 'slight_drift', or 'off_topic'")
     next_action: str = Field(..., description="Action for the host: 'standard_follow_up', 'clarify', 'steer_back', 'enthusiastic_interjection'")
+
+class TranslationRequest(BaseModel):
+    text: str = Field(..., description="The text to translate")
+    target_language: str = Field(..., description="Target language (Hindi, Kannada, Tamil, Telugu)")
+
+class TranslationResponse(BaseModel):
+    translated_text: str
+    original_text: str
+    language: str
