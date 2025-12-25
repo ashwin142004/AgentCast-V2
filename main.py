@@ -1,9 +1,16 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from app.schemas import PodcastRequest, PodcastResponse, TranslationRequest, TranslationResponse
 from app.workflow import build_graph
 
 app = FastAPI(title="AgentCast V2 API")
 graph = build_graph()
+
+# Global Exception Handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    print(f"❌ Server Error: {exc}")
+    return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 @app.get("/")
 def health_check():
@@ -22,19 +29,15 @@ async def generate_podcast(request: PodcastRequest):
         "final_script": ""
     }
     
-    try:
-        # Run graph to completion
-        result = graph.invoke(initial_state)
-        
-        return PodcastResponse(
-            status="completed",
-            script=result["final_script"],
-            original_script=None, # Could capture intermediate if needed
-            language=request.language
-        )
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    # Run graph to completion
+    result = graph.invoke(initial_state)
+    
+    return PodcastResponse(
+        status="completed",
+        script=result["final_script"],
+        original_script=None, # Could capture intermediate if needed
+        language=request.language
+    )
 
 @app.post("/translate", response_model=TranslationResponse)
 async def translate_text_endpoint(request: TranslationRequest):
@@ -43,16 +46,12 @@ async def translate_text_endpoint(request: TranslationRequest):
     # Ensure this import path matches your folder structure
     from app.agents.translator import translate_script
     
-    try:
-        translated = translate_script(request.text, request.target_language)
-        return TranslationResponse(
-            translated_text=translated,
-            original_text=request.text,
-            language=request.target_language
-        )
-    except Exception as e:
-        print(f"❌ Translation Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    translated = translate_script(request.text, request.target_language)
+    return TranslationResponse(
+        translated_text=translated,
+        original_text=request.text,
+        language=request.target_language
+    )
 
 if __name__ == "__main__":
     import uvicorn

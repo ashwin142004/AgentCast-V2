@@ -1,17 +1,10 @@
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from indicnlp.transliterate.unicode_transliterate import UnicodeIndicTransliterator
+from functools import lru_cache
 
 class Translator:
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._init()
-        return cls._instance
-
-    def _init(self):
+    def __init__(self):
         print("Loading AI Model... (Downloads ~4GB first time)")
 
         self.model_name = "ai4bharat/indictrans2-en-indic-1B"
@@ -108,14 +101,9 @@ class Translator:
         
         return decoded_text
 
-# Singleton
-_translator = None
-
+@lru_cache(maxsize=1)
 def get_translator():
-    global _translator
-    if _translator is None:
-        _translator = Translator()
-    return _translator
+    return Translator()
 
 def translate_script(text, target_language):
     return get_translator().translate(text, target_language)

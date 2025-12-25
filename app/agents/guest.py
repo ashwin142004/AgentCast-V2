@@ -1,11 +1,12 @@
 from langchain_core.messages import HumanMessage, BaseMessage, AIMessage
 from app.config import llm
 from typing import List
+from app.utils import format_conversation_history
 
 def get_guest_response(topic: str, messages: List[BaseMessage]) -> str:
     """Generates the guest's expert answer."""
     
-    history = "\n".join([f"{'Host' if isinstance(m, HumanMessage) else 'Guest'}: {m.content}" for m in messages])
+    history = format_conversation_history(messages)
     
     prompt = f"""
     You are a world-renowned expert Guest on 'AgentCast'.

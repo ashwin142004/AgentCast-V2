@@ -8,6 +8,7 @@ from app.agents.guest import get_guest_response
 from app.agents.judge import run_dcs_analysis
 from app.agents.translator import translate_script
 from app.schemas import DCSAnalysis
+from app.utils import format_conversation_history
 
 # Define State
 class GraphState(TypedDict):
@@ -52,7 +53,7 @@ def judge_node(state: GraphState):
 def translator_node(state: GraphState):
     print("--- TRANSLATOR NODE ---")
     # Compile script
-    full_script = "\n".join([f"{'Host' if isinstance(m, HumanMessage) else 'Guest'}: {m.content}" for m in state["messages"]])
+    full_script = format_conversation_history(state["messages"])
     
     # Translate
     translated = translate_script(full_script, state["target_language"])
