@@ -6,9 +6,13 @@ class PodcastRequest(BaseModel):
     tone: str = Field("Casual", description="The tone of the conversation (e.g., Casual, Formal, Debate)")
 
 
+class DialogueTurn(BaseModel):
+    Host: str = Field(..., description="The host's dialogue")
+    Guest: str = Field(..., description="The guest's dialogue")
+
 class PodcastResponse(BaseModel):
     status: str
-    script: Optional[str] = None
+    script: Optional[List[DialogueTurn]] = None
     original_script: Optional[str] = None
     language: str
 
@@ -23,10 +27,12 @@ class DCSAnalysis(BaseModel):
     next_action: str = Field(..., description="Action for the host: 'standard_follow_up', 'clarify', 'steer_back', 'enthusiastic_interjection'")
 
 class TranslationRequest(BaseModel):
-    text: str = Field(..., description="The text to translate")
+    text: Optional[str] = Field(None, description="Single text to translate")
+    script: Optional[List[DialogueTurn]] = Field(None, description="Full podcast script to translate")
     target_language: str = Field(..., description="Target language (Hindi, Kannada, Tamil, Telugu)")
 
 class TranslationResponse(BaseModel):
-    translated_text: str
-    original_text: str
+    translated_text: Optional[str] = None
+    translated_script: Optional[List[DialogueTurn]] = None
+    original_text: Optional[str] = None
     language: str
