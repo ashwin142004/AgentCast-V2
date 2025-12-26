@@ -6,7 +6,7 @@ import operator
 from app.agents.host import get_host_response
 from app.agents.guest import get_guest_response
 from app.agents.judge import run_dcs_analysis
-from app.agents.translator import translate_script
+
 from app.schemas import DCSAnalysis
 
 # Define State
@@ -49,20 +49,18 @@ def judge_node(state: GraphState):
     print(f"\n⚖️ JUDGE: Coherence={analysis.coherence_score}/10 | Action={analysis.next_action}\n")
     return {"dcs_analysis": analysis.dict(), "turn_count": state["turn_count"] + 1}
 
-def translator_node(state: GraphState):
-    print("--- TRANSLATOR NODE ---")
+def finalize_dialogue(state: GraphState):
+    print("--- FINALIZE DIALOGUE NODE ---")
     # Compile script
     full_script = "\n".join([f"{'Host' if isinstance(m, HumanMessage) else 'Guest'}: {m.content}" for m in state["messages"]])
     
-    # Translate
-    translated = translate_script(full_script, state["target_language"])
-    print(f"\n🔠 TRANSLATED SCRIPT ({state['target_language']}):\n{translated[:200]}...\n(Check API response for full text)\n")
-    return {"final_script": translated}
+    print(f"\n📝 FINAL SCRIPT:\n{full_script[:200]}...\n")
+    return {"final_script": full_script}
 
 # Conditional Logic
 def should_continue(state: GraphState):
     if state["turn_count"] >= 3: # 3 turns max for prototype
-        return "translate"
+        return "finalize"
     return "host"
 
 # Build Graph
@@ -72,7 +70,7 @@ def build_graph():
     workflow.add_node("host", host_node)
     workflow.add_node("guest", guest_node)
     workflow.add_node("judge", judge_node)
-    workflow.add_node("translator", translator_node)
+    workflow.add_node("finalize", finalize_dialogue)
     
     workflow.set_entry_point("host")
     
@@ -84,10 +82,10 @@ def build_graph():
         should_continue,
         {
             "host": "host",
-            "translate": "translator"
+            "finalize": "finalize"
         }
     )
     
-    workflow.add_edge("translator", END)
+    workflow.add_edge("finalize", END)
     
     return workflow.compile()

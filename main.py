@@ -18,23 +18,19 @@ async def generate_podcast(request: PodcastRequest):
         "messages": [],
         "dcs_analysis": {},
         "turn_count": 0,
-        "target_language": request.language,
+        "target_language": "English",
         "final_script": ""
     }
     
-    try:
-        # Run graph to completion
-        result = graph.invoke(initial_state)
-        
-        return PodcastResponse(
-            status="completed",
-            script=result["final_script"],
-            original_script=None, # Could capture intermediate if needed
-            language=request.language
-        )
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    # Run graph to completion
+    result = graph.invoke(initial_state)
+    
+    return PodcastResponse(
+        status="completed",
+        script=result["final_script"],
+        original_script=None, # Could capture intermediate if needed
+        language="English"
+    )
 
 @app.post("/translate", response_model=TranslationResponse)
 async def translate_text_endpoint(request: TranslationRequest):

@@ -4,7 +4,7 @@ from typing import List, Optional
 class PodcastRequest(BaseModel):
     topic: str = Field(..., description="The main topic of the podcast")
     tone: str = Field("Casual", description="The tone of the conversation (e.g., Casual, Formal, Debate)")
-    language: str = Field("English", description="Target language (English, Hindi, Kannada, Tamil, Telugu)")
+
 
 class PodcastResponse(BaseModel):
     status: str

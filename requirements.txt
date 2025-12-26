@@ -13,4 +13,3 @@ nltk
 mosestokenizer
 git+https://github.com/VarunGumma/IndicTransToolkit
 indic-nlp-library
-ip_association
