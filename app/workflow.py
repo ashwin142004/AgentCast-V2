@@ -8,6 +8,7 @@ from app.agents.guest import get_guest_response
 from app.agents.judge import run_dcs_analysis
 
 from app.schemas import DCSAnalysis
+from app.utils import format_conversation_history
 
 # Define State
 class GraphState(TypedDict):
@@ -52,7 +53,7 @@ def judge_node(state: GraphState):
 def finalize_dialogue(state: GraphState):
     print("--- FINALIZE DIALOGUE NODE ---")
     # Compile script
-    full_script = "\n".join([f"{'Host' if isinstance(m, HumanMessage) else 'Guest'}: {m.content}" for m in state["messages"]])
+    full_script = format_conversation_history(state["messages"])
     
     print(f"\n📝 FINAL SCRIPT:\n{full_script[:200]}...\n")
     return {"final_script": full_script}

@@ -1,12 +1,13 @@
 from langchain_core.messages import HumanMessage, BaseMessage
 from app.config import llm
 from typing import List, Dict, Any
+from app.utils import format_conversation_history
 
 def get_host_response(topic: str, messages: List[BaseMessage], dcs_analysis: Dict[str, Any]) -> str:
     """Generates the host's next question."""
     
     # Format history
-    history = "\n".join([f"{'Host' if isinstance(m, HumanMessage) else 'Guest'}: {m.content}" for m in messages])
+    history = format_conversation_history(messages)
 
     # Determine guidance based on previous turn's analysis
     guidance = "Ask a relevant follow-up question."
