@@ -25,7 +25,7 @@ async def generate_podcast(request: PodcastRequest):
         "messages": [],
         "dcs_analysis": {},
         "turn_count": 0,
-        "target_language": request.language,
+        "target_language": "English",
         "final_script": ""
     }
     
@@ -36,7 +36,7 @@ async def generate_podcast(request: PodcastRequest):
         status="completed",
         script=result["final_script"],
         original_script=None, # Could capture intermediate if needed
-        language=request.language
+        language="English"
     )
 
 @app.post("/translate", response_model=TranslationResponse)
