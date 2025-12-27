@@ -19,9 +19,11 @@ class Translator:
             trust_remote_code=True
         )
 
+        # Load in half-precision (fp16) if on CUDA to save memory
         self.model = AutoModelForSeq2SeqLM.from_pretrained(
             self.model_name,
-            trust_remote_code=True
+            trust_remote_code=True,
+            dtype=torch.float16 if self.device == "cuda" else torch.float32
         ).to(self.device)
         
         self.model.eval()
@@ -79,7 +81,7 @@ class Translator:
             outputs = self.model.generate(
                 **inputs,
                 max_length=256,
-                num_beams=5,
+                num_beams=1, # Reduced to 1 to save memory
                 use_cache=False 
             )
 
