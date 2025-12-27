@@ -9,79 +9,134 @@ make run
 ```
 You should see: `Uvicorn running on http://127.0.0.1:8000`.
 
-## 2. API Endpoint Details
+## 2. API Endpoints
+
+### 2.1 Generate Podcast
 -   **URL**: `http://127.0.0.1:8000/generate-podcast`
 -   **Method**: `POST`
 -   **Headers**: `Content-Type: application/json`
+-   **Payload**:
+    ```json
+    {
+        "topic": "string",
+        "tone": "Casual" 
+    }
+    ```
+    *Note: `tone` can be "Casual", "Formal", or "Debate".*
+
+### 2.2 Translate
+-   **URL**: `http://127.0.0.1:8000/translate`
+-   **Method**: `POST`
+-   **Headers**: `Content-Type: application/json`
+-   **Payload (Option A - Script)**:
+    ```json
+    {
+        "script": [
+            {"Host": "Hello", "Guest": "Hi"}
+        ],
+        "target_language": "Hindi"
+    }
+    ```
+-   **Payload (Option B - Single Text)**:
+    ```json
+    {
+        "text": "Hello World",
+        "target_language": "Kannada"
+    }
+    ```
 
 ## 3. Postman Test Scenarios
 
 ### Scenario A: Standard English Podcast
-*Tests the core Host-Guest loop in the default language.*
+*Tests the core Host-Guest loop generation.*
 
+**Endpoint**: `/generate-podcast`
 **Body (JSON):**
 ```json
 {
     "topic": "The Future of Artificial General Intelligence",
-    "tone": "Casual",
-    "language": "English"
+    "tone": "Casual"
 }
 ```
 **Expected Result:**
 -   **Status**: 200 OK
--   **Response**: A script with `Host:` and `Guest:` lines in English.
+-   **Response**: A JSON object containing a `script` array.
+    ```json
+    {
+        "status": "completed",
+        "script": [
+            {"Host": "...", "Guest": "..."}
+        ],
+        "language": "English"
+    }
+    ```
 -   **Server Log**: You should see 3 turns of conversation (Host -> Guest -> Judge).
 
 ---
 
-### Scenario B: Multilingual Support (Hindi)
-*Tests the Translation Agent and Code-Mixing capabilities.*
+### Scenario B: Translate Script (Hindi)
+*Tests the detailed script translation mechanism.*
 
+**Endpoint**: `/translate`
 **Body (JSON):**
 ```json
 {
-    "topic": "Black Holes and Event Horizons",
-    "tone": "Formal",
-    "language": "Hindi"
+    "script": [
+        {"Host": "Welcome to the show.", "Guest": "Thanks for having me."}
+    ],
+    "target_language": "Hindi"
 }
 ```
 **Expected Result:**
--   **Response**: A script in Hindi script (Devanagari).
--   **Key Check**: Technical terms like "Black Hole", "Event Horizon", and "Gravity" should remain in English (Code-Mixing).
+-   **Response**:
+    ```json
+    {
+        "translated_script": [
+            {"Host": "...", "Guest": "..."}
+        ],
+        "language": "Hindi"
+    }
+    ```
+-   **Key Check**: The values should be in Devanagari script.
 
 ---
 
-### Scenario C: Regional Language (Kannada)
-*Tests support for Dravidian languages.*
+### Scenario C: Translate Text (Kannada)
+*Tests the single text fallback translation.*
 
+**Endpoint**: `/translate`
 **Body (JSON):**
 ```json
 {
-    "topic": "Sustainable Farming Practices",
-    "tone": "Educational",
-    "language": "Kannada"
+    "text": "The universe is vast and mysterious.",
+    "target_language": "Kannada"
 }
 ```
 **Expected Result:**
--   **Response**: A script in Kannada.
--   **Key Check**: Look for preservation of context. The idioms should be adapted (e.g., "Mother Earth" -> "Bhoomi Tayi").
+-   **Response**:
+    ```json
+    {
+        "translated_text": "...",
+        "language": "Kannada"
+    }
+    ```
 
 ---
 
 ### Scenario D: High-Stakes Debate
 *Tests the "Tone" parameter's influence on the Host Agent.*
 
+**Endpoint**: `/generate-podcast`
 **Body (JSON):**
 ```json
 {
     "topic": "Is Remote Work Good for Society?",
-    "tone": "Debate",
-    "language": "English"
+    "tone": "Debate"
 }
 ```
 **Expected Result:**
--   **Response**: The Host should ask more challenging, slightly aggressive questions.
--   **DCS Judge**: Watch the server logs for the Judge's `next_action`. You might see `steer_back` or `clarify` if the Guest gets too defensive.
+-   **Response**: The generated script's Host dialogue should be challenging and aggressive.
+-   **DCS Judge**: Watch the server logs for `next_action`.
 
 ## 4. Troubleshooting
 
