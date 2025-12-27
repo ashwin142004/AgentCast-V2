@@ -8,7 +8,8 @@ from app.agents.guest import get_guest_response
 from app.agents.judge import run_dcs_analysis
 
 from app.schemas import DCSAnalysis
-from app.utils import format_conversation_history
+from app.schemas import DCSAnalysis, DialogueTurn
+from app.utils import format_conversation_history, format_conversation_as_list
 
 # Define State
 class GraphState(TypedDict):
@@ -17,7 +18,7 @@ class GraphState(TypedDict):
     dcs_analysis: Dict[str, Any]
     turn_count: int
     target_language: str
-    final_script: str
+    final_script: List[DialogueTurn]
 
 # Nodes
 def host_node(state: GraphState):
@@ -53,14 +54,14 @@ def judge_node(state: GraphState):
 def finalize_dialogue(state: GraphState):
     print("--- FINALIZE DIALOGUE NODE ---")
     # Compile script
-    full_script = format_conversation_history(state["messages"])
+    full_script = format_conversation_as_list(state["messages"])
     
-    print(f"\n📝 FINAL SCRIPT:\n{full_script[:200]}...\n")
+    print(f"\n📝 FINAL SCRIPT:\n{full_script[:2]}...\n")
     return {"final_script": full_script}
 
 # Conditional Logic
 def should_continue(state: GraphState):
-    if state["turn_count"] >= 3: # 3 turns max for prototype
+    if state["turn_count"] >= 2: # 3 turns max for prototype
         return "finalize"
     return "host"
 

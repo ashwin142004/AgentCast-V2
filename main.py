@@ -39,19 +39,31 @@ async def generate_podcast(request: PodcastRequest):
         language="English"
     )
 
-@app.post("/translate", response_model=TranslationResponse)
+@app.post("/translate", response_model=TranslationResponse, response_model_exclude_none=True)
 async def translate_text_endpoint(request: TranslationRequest):
     print(f"Loading Translator for: {request.target_language}")
     
     # Ensure this import path matches your folder structure
-    from app.agents.translator import translate_script
+    from app.agents.translator import translate_script, translate_dialogue
     
-    translated = translate_script(request.text, request.target_language)
-    return TranslationResponse(
-        translated_text=translated,
-        original_text=request.text,
-        language=request.target_language
-    )
+    if request.script:
+        translated_script = translate_dialogue(request.script, request.target_language)
+        return TranslationResponse(
+            translated_script=translated_script,
+            original_script=request.script,
+            language=request.target_language
+        )
+    
+    # Fallback to single text
+    if request.text:
+        translated = translate_script(request.text, request.target_language)
+        return TranslationResponse(
+            translated_text=translated,
+            original_text=request.text,
+            language=request.target_language
+        )
+        
+    return TranslationResponse(language=request.target_language) # Empty if nothing provided
 
 if __name__ == "__main__":
     import uvicorn

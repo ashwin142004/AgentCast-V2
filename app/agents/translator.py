@@ -19,9 +19,11 @@ class Translator:
             trust_remote_code=True
         )
 
+        # Load in half-precision (fp16) if on CUDA to save memory
         self.model = AutoModelForSeq2SeqLM.from_pretrained(
             self.model_name,
-            trust_remote_code=True
+            trust_remote_code=True,
+            dtype=torch.float16 if self.device == "cuda" else torch.float32
         ).to(self.device)
         
         self.model.eval()
@@ -79,7 +81,7 @@ class Translator:
             outputs = self.model.generate(
                 **inputs,
                 max_length=256,
-                num_beams=5,
+                num_beams=1, # Reduced to 1 to save memory
                 use_cache=False 
             )
 
@@ -104,6 +106,25 @@ class Translator:
 @lru_cache(maxsize=1)
 def get_translator():
     return Translator()
+
+from typing import List
+from app.schemas import DialogueTurn
+
+def translate_dialogue(script: List[DialogueTurn], target_language: str) -> List[DialogueTurn]:
+    translator = get_translator()
+    translated_script = []
+    
+    print(f"Translating {len(script)} turns into {target_language}...")
+    
+    for turn in script:
+        # Translate Host
+        h_trans = translator.translate(turn.Host, target_language)
+        # Translate Guest
+        g_trans = translator.translate(turn.Guest, target_language)
+        
+        translated_script.append(DialogueTurn(Host=h_trans, Guest=g_trans))
+        
+    return translated_script
 
 def translate_script(text, target_language):
     return get_translator().translate(text, target_language)
