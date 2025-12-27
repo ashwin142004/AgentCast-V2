@@ -39,7 +39,7 @@ async def generate_podcast(request: PodcastRequest):
         language="English"
     )
 
-@app.post("/translate", response_model=TranslationResponse)
+@app.post("/translate", response_model=TranslationResponse, response_model_exclude_none=True)
 async def translate_text_endpoint(request: TranslationRequest):
     print(f"Loading Translator for: {request.target_language}")
     
@@ -50,6 +50,7 @@ async def translate_text_endpoint(request: TranslationRequest):
         translated_script = translate_dialogue(request.script, request.target_language)
         return TranslationResponse(
             translated_script=translated_script,
+            original_script=request.script,
             language=request.target_language
         )
     

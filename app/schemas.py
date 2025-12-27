@@ -35,4 +35,5 @@ class TranslationResponse(BaseModel):
     translated_text: Optional[str] = None
     translated_script: Optional[List[DialogueTurn]] = None
     original_text: Optional[str] = None
+    original_script: Optional[List[DialogueTurn]] = None
     language: str
