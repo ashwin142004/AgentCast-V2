@@ -37,3 +37,11 @@ class TranslationResponse(BaseModel):
     original_text: Optional[str] = None
     original_script: Optional[List[DialogueTurn]] = None
     language: str
+
+class TTSRequest(BaseModel):
+    script: List[DialogueTurn] = Field(..., description="Full podcast script to convert to speech")
+    language: str = Field(..., description="Target language for voice selection")
+
+class TTSResponse(BaseModel):
+    audio_file: str
+    language: str
