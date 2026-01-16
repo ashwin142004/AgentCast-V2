@@ -4,11 +4,13 @@ from datasets import load_dataset
 from huggingface_hub import login
 import torch
 import os
+from dotenv import load_dotenv
 
-print("--- TRAINING SCRIPT STARTING ---")
+load_dotenv()
+
+print("--- DRY RUN TRAINING SCRIPT STARTING ---")
 
 # 1. Login
-# Ensure 'hg_token' env var is set or you are logged in via CLI
 login(token=os.getenv("hg_token"))
 
 MODEL_NAME = "google/gemma-2b"
@@ -67,55 +69,48 @@ if not os.path.exists(DATA_FILE):
 
 print(f"Loading local dataset: {DATA_FILE}")
 dataset = load_dataset("json", data_files=DATA_FILE, split="train")
-print(f"Dataset loaded. Size: {len(dataset)} samples.")
+# Use small subset for dry run if huge
+dataset = dataset.select(range(min(len(dataset), 50)))
+print(f"Dataset loaded. Dry run size: {len(dataset)} samples.")
 
 # 5. Format & Tokenize
 def format_and_tokenize(example):
-    # Apply standard chat template
-    # messages = [{"role": "system",...}, {"role": "user",...}, {"role": "assistant",...}]
-    
     # Template already set globally
     pass
-    
+
     text = tokenizer.apply_chat_template(
         example["messages"], 
         tokenize=False, 
         add_generation_prompt=False
     )
-    
-    # Tokenize
     tokenized = tokenizer(
         text, 
         truncation=True, 
         padding="max_length", 
         max_length=512
     )
-    
-    # Set labels for Causal LM (ignore padding)
     tokenized["labels"] = tokenized["input_ids"].copy()
     return tokenized
 
 print("Tokenizing dataset...")
 train_dataset = dataset.map(format_and_tokenize, remove_columns=["messages"])
 
-# 6. Training Arguments
-output_dir = "./podcast-lora"
-hub_model_id = "Shreesha012/gemma-podcast-lora"
+# 6. Training Arguments (DRY RUN)
+output_dir = "./podcast-lora-dryrun"
 
 args = TrainingArguments(
-    per_device_train_batch_size=2,
-    gradient_accumulation_steps=4,
-    warmup_steps=100,
-    max_steps=2000,           # Increased significantly
-    learning_rate=1e-4,       # Optimal for LoRA
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=1,
+    warmup_steps=0,
+    max_steps=5,              # DRY RUN: 5 steps
+    learning_rate=1e-4,
     fp16=True,
-    logging_steps=10,
+    logging_steps=1,
     output_dir=output_dir,
-    save_total_limit=2,
-    save_steps=500,
-    push_to_hub=True,
-    hub_model_id=hub_model_id,
-    report_to="none"          # Disable wandb unless configured
+    save_total_limit=1,
+    save_steps=5,
+    push_to_hub=False,        # DISABLE PUSH
+    report_to="none"
 )
 
 trainer = Trainer(
@@ -126,12 +121,7 @@ trainer = Trainer(
 )
 
 # 7. Train
-print("Starting training...")
+print("Starting training (DRY RUN)...")
 trainer.train()
 
-# 8. Save & Push
-print("Saving model...")
-trainer.save_model(output_dir)
-print("Pushing to Hub...")
-trainer.push_to_hub()
-print("Training Complete!")
+print("✅ Dry run complete!")
