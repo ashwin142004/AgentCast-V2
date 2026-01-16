@@ -34,6 +34,7 @@ class TranslationRequest(BaseModel):
 class TranslationResponse(BaseModel):
     translated_text: Optional[str] = None
     translated_script: Optional[List[DialogueTurn]] = None
+    script: Optional[List[DialogueTurn]] = None # Alias for translated_script to match TTSRequest
     original_text: Optional[str] = None
     original_script: Optional[List[DialogueTurn]] = None
     language: str

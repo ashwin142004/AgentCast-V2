@@ -50,6 +50,7 @@ async def translate_text_endpoint(request: TranslationRequest):
         translated_script = translate_dialogue(request.script, request.target_language)
         return TranslationResponse(
             translated_script=translated_script,
+            script=translated_script, # Populate alias
             original_script=request.script,
             language=request.target_language
         )
