@@ -181,3 +181,13 @@ cython_debug/
 .cursorindexingignore
 
 chroma_db/
+
+
+
+# Project specific
+lex_guest_qa.jsonl
+lex_guest_qa_dataset/
+lora-model/
+podcast-lora/
+podcast-lora-dryrun/
+static/

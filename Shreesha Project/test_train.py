@@ -19,7 +19,12 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 # Set chat template globally for base model
 tokenizer.chat_template = (
     "{{ bos_token }}"
-    "{% for message in messages %}"
+    "{% set loop_messages = messages %}"
+    "{% if messages[0]['role'] == 'system' %}"
+    "{{ '<start_of_turn>system\\n' + messages[0]['content'] | trim + '<end_of_turn>\\n' }}"
+    "{% set loop_messages = messages[1:] %}"
+    "{% endif %}"
+    "{% for message in loop_messages %}"
     "{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}"
     "{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}"
     "{% endif %}"
@@ -28,7 +33,7 @@ tokenizer.chat_template = (
     "{% elif message['role'] == 'assistant' %}"
     "{{ '<start_of_turn>model\\n' + message['content'] | trim + '<end_of_turn>\\n' }}"
     "{% else %}"
-    "{{ '<start_of_turn>system\\n' + message['content'] | trim + '<end_of_turn>\\n' }}"
+    "{{ raise_exception('Only user and assistant roles are allowed after initial system message') }}"
     "{% endif %}"
     "{% endfor %}"
     "{% if add_generation_prompt %}"
