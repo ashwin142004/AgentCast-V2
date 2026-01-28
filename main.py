@@ -1,9 +1,11 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from app.schemas import PodcastRequest, PodcastResponse, TranslationRequest, TranslationResponse, TTSRequest, TTSResponse
 from app.workflow import build_graph
 
 app = FastAPI(title="AgentCast V2 API")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 graph = build_graph()
 
 # Global Exception Handler

@@ -5,7 +5,7 @@ from typing import List, Dict
 from app.schemas import DialogueTurn
 
 # Directory to save audio files
-AUDIO_DIR = "static/audio"
+AUDIO_DIR = "static/audio/"
 os.makedirs(AUDIO_DIR, exist_ok=True)
 
 class TTSHandler:
