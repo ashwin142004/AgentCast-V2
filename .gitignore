@@ -181,3 +181,7 @@ cython_debug/
 .cursorindexingignore
 
 chroma_db/
+static/
+podcast-lora-dryrun/
+Shreesha Project/
+lex_guest_qa.jsonl

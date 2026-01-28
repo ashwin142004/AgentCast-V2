@@ -13,3 +13,6 @@ nltk
 mosestokenizer
 git+https://github.com/VarunGumma/IndicTransToolkit
 indic-nlp-library
+edge-tts
+aiofiles
+pydub

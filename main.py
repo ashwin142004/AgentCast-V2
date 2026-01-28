@@ -1,15 +1,17 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
-from app.schemas import PodcastRequest, PodcastResponse, TranslationRequest, TranslationResponse
+from app.schemas import PodcastRequest, PodcastResponse, TranslationRequest, TranslationResponse, TTSRequest, TTSResponse
 from app.workflow import build_graph
 
 app = FastAPI(title="AgentCast V2 API")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 graph = build_graph()
 
 # Global Exception Handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
-    print(f"❌ Server Error: {exc}")
+    print(f"Server Error: {exc}")
     return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 @app.get("/")
@@ -50,6 +52,7 @@ async def translate_text_endpoint(request: TranslationRequest):
         translated_script = translate_dialogue(request.script, request.target_language)
         return TranslationResponse(
             translated_script=translated_script,
+            script=translated_script, # Populate alias
             original_script=request.script,
             language=request.target_language
         )
@@ -64,6 +67,20 @@ async def translate_text_endpoint(request: TranslationRequest):
         )
         
     return TranslationResponse(language=request.target_language) # Empty if nothing provided
+
+@app.post("/text-to-speech", response_model=TTSResponse)
+async def text_to_speech_endpoint(request: TTSRequest):
+    print(f"Generating Audio for: {request.language}")
+    
+    from app.agents.tts_handler import tts_handler
+    
+    # helper returns single file path now
+    audio_file = await tts_handler.process_script(request.script, request.language)
+    
+    return TTSResponse(
+        audio_file=audio_file,
+        language=request.language
+    )
 
 if __name__ == "__main__":
     import uvicorn
