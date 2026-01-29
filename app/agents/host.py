@@ -1,5 +1,5 @@
 from langchain_core.messages import HumanMessage, BaseMessage
-from app.config import llm
+from app.config import host_llm
 from typing import List, Dict, Any
 from app.utils import format_conversation_history
 
@@ -32,5 +32,5 @@ def get_host_response(topic: str, messages: List[BaseMessage], dcs_analysis: Dic
     Generate only your next response/question.
     """
     
-    response = llm.invoke(prompt)
+    response = host_llm.invoke(prompt)
     return response.content
