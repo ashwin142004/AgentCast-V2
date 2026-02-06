@@ -49,7 +49,7 @@ def judge_node(state: GraphState):
     # PASS FULL MESSAGES TO JUDGE for Cumulative Metrics
     analysis = run_dcs_analysis(state["topic"], messages)
     
-    logger.info(f"\n⚖️ JUDGE: Coherence={analysis.coherence_score}/10 | MOS={analysis.mean_opinion_score} | Action={analysis.next_action}\n")
+    logger.info(f"\n⚖️ JUDGE: Coherence={analysis.coherence_score}/10 | MOS={analysis.mean_opinion_score} | Topic retention={analysis.topic_retention_pct}% | Action={analysis.next_action}\n")
     return {"dcs_analysis": analysis.dict(), "turn_count": state["turn_count"] + 1}
 
 def finalize_dialogue(state: GraphState):

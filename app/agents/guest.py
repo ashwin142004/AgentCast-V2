@@ -26,7 +26,7 @@ def get_guest_response(topic: str, messages: List[BaseMessage]) -> str:
     ---
     
     INSTRUCTIONS FOR YOUR RESPONSE:
-    1. Answer Directly: Address the Host's question immediately. Do not waffle.
+    1. Answer Directly: Address the Host's question immediately. Do not waffle/veer off topic.
     2. Provide Value: Share an insight that isn't obvious to a layperson.
     3. Be Concise: Limit yourself to approx. 3-4 sentences. This is a dialogue, not a lecture.
     4. Connect: If the host challenges you, defend your position respectfully but firmly.

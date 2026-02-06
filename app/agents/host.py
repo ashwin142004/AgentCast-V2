@@ -39,6 +39,7 @@ def get_host_response(topic: str, messages: List[BaseMessage], dcs_analysis: Dic
     ---
     
     INSTRUCTIONS FOR YOUR RESPONSE:
+    { "Introduce yourself and welcome the guest and the audience to the show." if not messages else "" }
     1. Acknowledge & Pivot: Briefly validate the guest's last point (if applicable) before pivoting to the next question.
     2. Follow Guidance: STRICTLY adhere to the 'Current Guidance'. 
        - If told to 'clarify', ask a specific clarifying question.
