@@ -3,6 +3,18 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from app.schemas import PodcastRequest, PodcastResponse, TranslationRequest, TranslationResponse, TTSRequest, TTSResponse
 from app.workflow import build_graph
+import logging
+import sys
+
+# Configure System Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="AgentCast V2 API")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -10,8 +22,9 @@ graph = build_graph()
 
 # Global Exception Handler
 @app.exception_handler(Exception)
+@app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
-    print(f"Server Error: {exc}")
+    logger.error(f"Server Error: {exc}", exc_info=True)
     return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 @app.get("/")
@@ -20,7 +33,7 @@ def health_check():
 
 @app.post("/generate-podcast", response_model=PodcastResponse)
 async def generate_podcast(request: PodcastRequest):
-    print(f"🚀 Receiving Request: {request}")
+    logger.info(f"🚀 Receiving Request: {request}")
     
     initial_state = {
         "topic": request.topic,
@@ -43,7 +56,7 @@ async def generate_podcast(request: PodcastRequest):
 
 @app.post("/translate", response_model=TranslationResponse, response_model_exclude_none=True)
 async def translate_text_endpoint(request: TranslationRequest):
-    print(f"Loading Translator for: {request.target_language}")
+    logger.info(f"Loading Translator for: {request.target_language}")
     
     # Ensure this import path matches your folder structure
     from app.agents.translator import translate_script, translate_dialogue
@@ -70,7 +83,7 @@ async def translate_text_endpoint(request: TranslationRequest):
 
 @app.post("/text-to-speech", response_model=TTSResponse)
 async def text_to_speech_endpoint(request: TTSRequest):
-    print(f"Generating Audio for: {request.language}")
+    logger.info(f"Generating Audio for: {request.language}")
     
     from app.agents.tts_handler import tts_handler
     

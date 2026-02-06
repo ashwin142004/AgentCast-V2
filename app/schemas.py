@@ -25,6 +25,12 @@ class DCSAnalysis(BaseModel):
     coherence_reason: str = Field(..., description="Reason for the score")
     topic_drift: str = Field(..., description="'on_topic', 'slight_drift', or 'off_topic'")
     next_action: str = Field(..., description="Action for the host: 'standard_follow_up', 'clarify', 'steer_back', 'enthusiastic_interjection'")
+    
+    # New Metrics
+    avg_coherence: float = Field(..., description="Running average of coherence scores (0-10)")
+    topic_retention_pct: float = Field(..., description="Percentage of conversation remaining on main topic (0-100)")
+    mean_opinion_score: float = Field(..., description="Estimated listener engagement score (1-5)")
+    conversational_stability_index: float = Field(..., description="stability metric (0-1, where 1 is perfectly stable flow)")
 
 class TranslationRequest(BaseModel):
     text: Optional[str] = Field(None, description="Single text to translate")

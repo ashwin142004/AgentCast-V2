@@ -20,43 +20,44 @@ class GraphState(TypedDict):
     target_language: str
     final_script: List[DialogueTurn]
 
+import logging
+logger = logging.getLogger(__name__)
+
 # Nodes
 def host_node(state: GraphState):
-    print("--- HOST NODE ---")
+    logger.info("--- HOST NODE ---")
     question = get_host_response(state["topic"], state["messages"], state["dcs_analysis"])
-    print(f"\n🎙️ HOST: {question}\n")
+    logger.info(f"\n🎙️ HOST: {question}\n")
     return {
         "messages": [HumanMessage(content=question)],
         "turn_count": state.get("turn_count", 0)
     }
 
 def guest_node(state: GraphState):
-    print("--- GUEST NODE ---")
+    logger.info("--- GUEST NODE ---")
     answer = get_guest_response(state["topic"], state["messages"])
-    print(f"\n👨‍🔬 GUEST: {answer}\n")
+    logger.info(f"\n👨‍🔬 GUEST: {answer}\n")
     return {"messages": [AIMessage(content=answer)]}
 
 def judge_node(state: GraphState):
-    print("--- JUDGE NODE ---")
+    logger.info("--- JUDGE NODE ---")
     # Last 2 messages: Host Question, Guest Answer (since we just added Guest Answer)
     messages = state["messages"]
     if len(messages) < 2:
         return {}
     
-    # Analyze the last pair
-    host_q = messages[-2].content
-    guest_a = messages[-1].content
+    # PASS FULL MESSAGES TO JUDGE for Cumulative Metrics
+    analysis = run_dcs_analysis(state["topic"], messages)
     
-    analysis = run_dcs_analysis(state["topic"], host_q, guest_a)
-    print(f"\n⚖️ JUDGE: Coherence={analysis.coherence_score}/10 | Action={analysis.next_action}\n")
+    logger.info(f"\n⚖️ JUDGE: Coherence={analysis.coherence_score}/10 | MOS={analysis.mean_opinion_score} | Action={analysis.next_action}\n")
     return {"dcs_analysis": analysis.dict(), "turn_count": state["turn_count"] + 1}
 
 def finalize_dialogue(state: GraphState):
-    print("--- FINALIZE DIALOGUE NODE ---")
+    logger.info("--- FINALIZE DIALOGUE NODE ---")
     # Compile script
     full_script = format_conversation_as_list(state["messages"])
     
-    print(f"\n📝 FINAL SCRIPT:\n{full_script[:2]}...\n")
+    logger.info(f"\n📝 FINAL SCRIPT:\n{full_script[:2]}...\n")
     return {"final_script": full_script}
 
 # Conditional Logic
