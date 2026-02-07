@@ -48,7 +48,10 @@ def get_host_response(topic: str, messages: List[BaseMessage], dcs_analysis: Dic
     3. Be Concise: Keep your response under 2-3 sentences.
     4. Audience Focus: Ask what the listener is dying to know next.
 
-    Generate ONLY your spoken dialogue. No stage directions.
+    CRITICAL STYLE INSTRUCTIONS:
+    - Generate ONLY your spoken dialogue. NO stage directions.
+    - DO NOT start your response with "Sure", "Here is", or any meta-commentary.
+    - START DIRECTLY with your dialogue.
     """
     
     response = host_llm.invoke(prompt)

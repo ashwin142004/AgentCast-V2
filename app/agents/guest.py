@@ -31,7 +31,11 @@ def get_guest_response(topic: str, messages: List[BaseMessage]) -> str:
     3. Be Concise: Limit yourself to approx. 3-4 sentences. This is a dialogue, not a lecture.
     4. Connect: If the host challenges you, defend your position respectfully but firmly.
     
-    Generate ONLY your spoken dialogue. No stage directions.
+    CRITICAL STYLE INSTRUCTIONS:
+    - Generate ONLY your spoken dialogue. NO stage directions.
+    - DO NOT start your response with "Sure", "Here is", "In this style", or any meta-commentary about the prompt.
+    - START DIRECTLY with your answer to the host.
+    - Do not act as an LLM or AI. Act as a human expert.
     """
     
     response = llm.invoke(prompt)
