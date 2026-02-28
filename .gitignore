@@ -179,3 +179,9 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+chroma_db/
+static/
+podcast-lora-dryrun/
+Shreesha Project/
+lex_guest_qa.jsonl

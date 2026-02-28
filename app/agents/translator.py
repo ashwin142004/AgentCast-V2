@@ -1,0 +1,130 @@
+import torch
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from indicnlp.transliterate.unicode_transliterate import UnicodeIndicTransliterator
+from functools import lru_cache
+
+class Translator:
+    def __init__(self):
+        print("Loading AI Model... (Downloads ~4GB first time)")
+
+        self.model_name = "ai4bharat/indictrans2-en-indic-1B"
+        
+        # Setup Device
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        print(f"Running on: {self.device}")
+
+        # Load Tokenizer & Model
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            self.model_name,
+            trust_remote_code=True
+        )
+
+        # Load in half-precision (fp16) if on CUDA to save memory
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+            self.model_name,
+            trust_remote_code=True,
+            dtype=torch.float16 if self.device == "cuda" else torch.float32
+        ).to(self.device)
+        
+        self.model.eval()
+
+        self.src_lang = "eng_Latn"
+
+        # Map: User Friendly Name -> (FLORES Code, ISO Code for Script)
+        self.lang_map = {
+            "Hindi":     ("hin_Deva", "hi"),
+            "Kannada":   ("kan_Knda", "kn"),
+            "Tamil":     ("tam_Taml", "ta"),
+            "Telugu":    ("tel_Telu", "te"),
+            "Malayalam": ("mal_Mlym", "ml"),
+            "Marathi":   ("mar_Deva", "mr"),
+            "Bengali":   ("ben_Beng", "bn"),
+            "Gujarati":  ("guj_Gujr", "gu")
+        }
+
+    def translate(self, text, target_language):
+        if not text or not text.strip():
+            return ""
+            
+        if target_language.lower() == "english":
+            return text
+
+        # 1. Resolve Language Codes
+        target_info = self.lang_map.get(target_language)
+        
+        # Case-insensitive fallback
+        if not target_info:
+            for k, v in self.lang_map.items():
+                if k.lower() == target_language.lower():
+                    target_info = v
+                    break
+        
+        if not target_info:
+            return f"Error: Unsupported language '{target_language}'"
+
+        flores_code, iso_code = target_info
+
+        # 2. Format Input
+        input_text = f"{self.src_lang} {flores_code} {text}"
+
+        # 3. Tokenize
+        inputs = self.tokenizer(
+            [input_text],
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=256
+        ).to(self.device)
+
+        # 4. Generate (With use_cache=False to prevent crash)
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs,
+                max_length=256,
+                num_beams=1, # Reduced to 1 to save memory
+                use_cache=False 
+            )
+
+        # 5. Decode (This output will be in HINDI script usually)
+        decoded_text = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
+        decoded_text = decoded_text.strip()
+
+        # 6. Post-Process: Convert Script (Hindi -> Target)
+        # If the target is NOT Hindi/Marathi, we likely need to convert the script.
+        # The model often outputs Dravidian languages in Devanagari.
+        if iso_code != "hi" and iso_code != "mr":
+            try:
+                # Transliterate from Hindi (Devanagari) to Target Script
+                final_text = UnicodeIndicTransliterator.transliterate(decoded_text, "hi", iso_code)
+                return final_text
+            except Exception as e:
+                print(f"Transliteration Error: {e}")
+                return decoded_text # Fallback to Devanagari if conversion fails
+        
+        return decoded_text
+
+@lru_cache(maxsize=1)
+def get_translator():
+    return Translator()
+
+from typing import List
+from app.schemas import DialogueTurn
+
+def translate_dialogue(script: List[DialogueTurn], target_language: str) -> List[DialogueTurn]:
+    translator = get_translator()
+    translated_script = []
+    
+    print(f"Translating {len(script)} turns into {target_language}...")
+    
+    for turn in script:
+        # Translate Host
+        h_trans = translator.translate(turn.Host, target_language)
+        # Translate Guest
+        g_trans = translator.translate(turn.Guest, target_language)
+        
+        translated_script.append(DialogueTurn(Host=h_trans, Guest=g_trans))
+        
+    return translated_script
+
+def translate_script(text, target_language):
+    return get_translator().translate(text, target_language)
